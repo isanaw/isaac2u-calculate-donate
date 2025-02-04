@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amount to Donate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .calendar-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+           px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Corrected */
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+        .day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative; /* Add this */
+        }
+
+.day button {
+    padding: 10px;
+    font-size: 14px;
+    width: 100%;
+    height: 50px; /* Set a fixed height */
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    white-space: normal; /* Allow text to wrap */
+    overflow: hidden; /* Hide overflow text */
+    text-align: center; /* Center the text */
+}
+        .day button:hover {
+            background-color: #0056b3;
+        }
+        .dropdown {
+            display: none;
+            position: absolute; /* Add this */
+            top: 100%; /* Add this */
+            left: 0; /* Add this */
+            width: 100%;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1; /* Add this */
+        }
+        .total {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        .total textarea {
+            width: 96%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            resize: none; /* Remove resize property */
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+        .buttons button {
+            padding: 15px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .buttons button:hover {
+            background-color: #0056b3;
+        }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            .calendar {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .day button {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Amount to Donate</h1>
+    <form>
+        <div class="calendar-container">
+            <div class="navigation">
+                <button type="button" onclick="changeMonth(-1)">&#9664; Previous Month</button>
+                <h2 id="monthName"></h2>
+                <button type="button" onclick="changeMonth(1)">Next Month &#9654;</button> <!-- Corrected -->
+            </div>
+            <div class="weekdays">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+            <div class="calendar" id="calendar"></div>
+            <div class="buttons">
+                <button type="button" onclick="calculateTotal()">Submit</button>
+                <button type="button" onclick="resetCalendar()">Reset</button>
+            </div>
+            <div class="total">
+                <textarea id="totalAmount" readonly></textarea>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let amounts = {};
+
+        function showDropdown(day) {
+            const dropdown = document.getElementById(day);
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block'; /* Corrected */
+        }
+
+        function updateAmountAndDisplay(day, value) {
+            amounts[day] = parseInt(value);
+            const button = document.querySelector(`button[onclick="showDropdown('${day}')"]`);
+            button.innerHTML = button.innerHTML.split("<br>")[0] + `<br><small>K${value}</small>`;
+            document.getElementById(day).style.display = 'none';
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            for (let key in amounts) {
+                total += amounts[key];
+            }
+            const month = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' });
+            document.getElementById('totalAmount').value = `The total amount to contribute for the month of ${month} ${currentYear} is K${total}.`;
+            adjustTextareaHeight();
+        }
+
+        function resetCalendar() {
+            amounts = {};
+            document.getElementById('totalAmount').value = '';
+            renderCalendar();
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            const monthName = document.getElementById('monthName');
+            const month = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' });
+            monthName.textContent = `${month} ${currentYear}`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                calendar.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const dayName = date.toLocaleString('default', { weekday: 'short' });
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'day';
+                dayDiv.innerHTML = `<button type="button" onclick="showDropdown('${dayName}${day}')">${dayName} ${day}</button>
+                                    <select id="${dayName}${day}" class="dropdown" onchange="updateAmountAndDisplay('${dayName}${day}', this.value)">
+                                        <option value="0">Select Amount</option>
+                                        <option value="40">K40</option>
+                                        <option value="80">K80</option>
+                                    </select>`;
+                calendar.appendChild(dayDiv);
+            }
+        }
+
+        function adjustTextareaHeight() {
+            const textarea = document.getElementById('totalAmount');
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        document.getElementById('totalAmount').addEventListener('input', adjustTextareaHeight);
+
+        renderCalendar();
+    </script>
+</body>
+</html>
